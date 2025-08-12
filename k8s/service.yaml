@@ -6,7 +6,7 @@ metadata:
   labels:
     app: eks-demo-app
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   ports:
   - port: 80
     targetPort: 5000
@@ -14,4 +14,3 @@ spec:
     name: http
   selector:
     app: eks-demo-app
-  sessionAffinity: None
