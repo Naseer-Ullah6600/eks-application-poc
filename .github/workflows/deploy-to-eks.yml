@@ -101,7 +101,7 @@ jobs:
         context: .
         push: true
         tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ steps.image-tag.outputs.tag }}
-        platforms: linux/amd64
+        # platforms: linux/amd64
         build-args: |
           BUILDKIT_INLINE_CACHE=1
 
