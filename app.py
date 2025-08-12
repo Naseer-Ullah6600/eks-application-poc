@@ -6,7 +6,8 @@ app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    deployment_tag = os.getenv('DEPLOYMENT_TAG', 'latest')
+    return render_template('index.html', deployment_tag=deployment_tag)
 
 @app.route('/health')
 def health():

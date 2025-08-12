@@ -96,25 +96,12 @@ jobs:
         driver-opts: |
           image=moby/buildkit:latest
 
-    - name: Extract metadata
-      id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}
-        tags: |
-          type=ref,event=branch
-          type=ref,event=pr
-          type=sha,prefix={{branch}}-
-          type=raw,value=latest,enable={{is_default_branch}}
-          type=raw,value=staging,enable={{is_default_branch}}
-
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
       with:
         context: .
         push: true
         tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ steps.image-tag.outputs.tag }}
-        labels: ${{ steps.meta.outputs.labels }}
         platforms: linux/amd64
         build-args: |
           BUILDKIT_INLINE_CACHE=1
@@ -165,6 +152,9 @@ jobs:
 
         # Update image to the computed unique tag
         kubectl -n eks-demo-app set image deployment/eks-demo-app eks-demo-app=${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG} --record
+        
+        # Update deployment with deployment tag environment variable
+        kubectl -n eks-demo-app patch deployment eks-demo-app -p '{"spec":{"template":{"spec":{"containers":[{"name":"eks-demo-app","env":[{"name":"DEPLOYMENT_TAG","value":"'${IMAGE_TAG}'"}]}]}}}}'
 
         # Wait for deployment to be ready
         kubectl rollout status deployment/eks-demo-app -n eks-demo-app --timeout=300s
