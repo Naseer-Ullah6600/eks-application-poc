@@ -21,7 +21,7 @@ def health():
 @app.route('/api/info')
 def info():
     return jsonify({
-        'application': 'EKS Demo App',
+        'application': 'EKS Demo-App',
         'description': 'A simple Flask application deployed to EKS cluster',
         'technology': 'Python Flask',
         'deployment': 'Kubernetes EKS',
