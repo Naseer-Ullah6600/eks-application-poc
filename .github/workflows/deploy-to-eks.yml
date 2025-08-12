@@ -58,7 +58,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    # The complex builder setup has been replaced with this single, simple step.
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
@@ -133,15 +132,18 @@ jobs:
         kubectl apply -f k8s/hpa.yaml
 
         # Update image to the computed unique tag
+        echo "Attempting to deploy image: ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
         kubectl -n eks-demo-app set image deployment/eks-demo-app eks-demo-app=${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG} --record
         
         # Update deployment with deployment tag environment variable
         kubectl -n eks-demo-app patch deployment eks-demo-app -p '{"spec":{"template":{"spec":{"containers":[{"name":"eks-demo-app","env":[{"name":"DEPLOYMENT_TAG","value":"'${IMAGE_TAG}'"}]}]}}}}'
 
         # Wait for deployment to be ready
+        echo "Waiting for deployment to stabilize..."
         kubectl rollout status deployment/eks-demo-app -n eks-demo-app --timeout=300s
 
         # Get service information
+        echo "Deployment successful!"
         kubectl get svc -n eks-demo-app
         kubectl get pods -n eks-demo-app
 
@@ -155,20 +157,10 @@ jobs:
         
         # Check ingress status
         kubectl get ingress eks-demo-app-ingress -n eks-demo-app
-
-  notify:
-    needs: [deploy-to-eks]
-    runs-on: ubuntu-latest
-    if: always()
-    steps:
-    - name: Notify deployment status
+        
+    - name: Rollback on failure
+      if: failure()
       run: |
-        if [ "${{ needs.deploy-to-eks.result }}" == "success" ]; then
-          echo "✅ Deployment successful!"
-          echo "🚀 Application deployed to EKS cluster: ${{ env.EKS_CLUSTER_NAME }}"
-          echo "📦 Image: ${{ env.ECR_REPOSITORY }}:${{ needs.build-and-push.outputs.image-tag }}"
-        else
-          echo "❌ Deployment failed!"
-          echo "🔍 Check the logs for more details"
-          exit 1
-        fi
+        echo "Deployment failed. Initiating rollback..."
+        kubectl rollout undo deployment/eks-demo-app -n eks-demo-app
+        echo "Rollback to previous version complete."
