@@ -54,7 +54,7 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     outputs:
-      image-tag: ${{ steps.meta.outputs.tags }}
+      image-tag: ${{ steps.image-tag.outputs.tag }}
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -84,6 +84,12 @@ jobs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v2
 
+    - name: Determine unique image tag
+      id: image-tag
+      run: |
+        SHORT_SHA=$(echo "${GITHUB_SHA}" | cut -c1-7)
+        echo "tag=${SHORT_SHA}" >> $GITHUB_OUTPUT
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
       with:
@@ -107,20 +113,11 @@ jobs:
       with:
         context: .
         push: true
-        tags: ${{ steps.meta.outputs.tags }}
+        tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ steps.image-tag.outputs.tag }}
         labels: ${{ steps.meta.outputs.labels }}
         platforms: linux/amd64
         build-args: |
           BUILDKIT_INLINE_CACHE=1
-
-    - name: Generate image tag
-      id: image-tag
-      run: |
-        if [ "${{ github.ref }}" = "refs/heads/main" ]; then
-          echo "tag=latest" >> $GITHUB_OUTPUT
-        else
-          echo "tag=${{ github.sha }}" >> $GITHUB_OUTPUT
-        fi
 
   deploy-to-eks:
     needs: build-and-push
@@ -137,6 +134,10 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.EKS_CLUSTER_REGION }}
 
+    - name: Login to Amazon ECR (deploy)
+      id: login-ecr-deploy
+      uses: aws-actions/amazon-ecr-login@v2
+
     - name: Update kube config
       run: |
         aws eks update-kubeconfig --region ${{ env.EKS_CLUSTER_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
@@ -149,36 +150,39 @@ jobs:
     - name: Deploy to EKS
       run: |
         # Set environment variables
-        export ECR_REGISTRY="${{ steps.login-ecr.outputs.registry }}"
+        export ECR_REGISTRY="${{ steps.login-ecr-deploy.outputs.registry }}"
         export ECR_REPOSITORY="${{ env.ECR_REPOSITORY }}"
         export IMAGE_TAG="${{ needs.build-and-push.outputs.image-tag }}"
-        
+
         # Create namespace if it doesn't exist
         kubectl apply -f k8s/namespace.yaml
-        
+
         # Apply Kubernetes manifests
         kubectl apply -f k8s/deployment.yaml
         kubectl apply -f k8s/service.yaml
         kubectl apply -f k8s/ingress.yaml
         kubectl apply -f k8s/hpa.yaml
-        
+
+        # Update image to the computed unique tag
+        kubectl -n eks-demo-app set image deployment/eks-demo-app eks-demo-app=${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG} --record
+
         # Wait for deployment to be ready
-        kubectl rollout status deployment/eks-demo-app -n default --timeout=300s
-        
+        kubectl rollout status deployment/eks-demo-app -n eks-demo-app --timeout=300s
+
         # Get service information
-        kubectl get svc -n default
-        kubectl get pods -n default
+        kubectl get svc -n eks-demo-app
+        kubectl get pods -n eks-demo-app
 
     - name: Verify deployment
       run: |
         # Check if pods are running
-        kubectl get pods -n default -l app=eks-demo-app
+        kubectl get pods -n eks-demo-app -l app=eks-demo-app
         
         # Check service status
-        kubectl get svc eks-demo-app-service -n default
+        kubectl get svc eks-demo-app-service -n eks-demo-app
         
         # Check ingress status
-        kubectl get ingress eks-demo-app-ingress -n default
+        kubectl get ingress eks-demo-app-ingress -n eks-demo-app
 
   notify:
     needs: [deploy-to-eks]

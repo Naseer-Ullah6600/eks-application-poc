@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: eks-demo-app
-  namespace: default
+  namespace: eks-demo-app
   labels:
     app: eks-demo-app
     version: v1

@@ -2,7 +2,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: eks-demo-app-hpa
-  namespace: default
+  namespace: eks-demo-app
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
