@@ -1,8 +1,8 @@
-# 🚀 EKS Demo Application
+# EKS Demo Application
 
 A complete demo application showcasing CI/CD pipeline deployment to Amazon EKS cluster using GitHub Actions, Docker, and Kubernetes.
 
-## 🏗️ Architecture Overview
+## Architecture Overview
 
 This project demonstrates a production-ready CI/CD pipeline that:
 
@@ -13,7 +13,7 @@ This project demonstrates a production-ready CI/CD pipeline that:
 5. **Deploys** to Amazon EKS cluster
 6. **Scales** automatically with HPA
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 - **Backend**: Python Flask 2.3.3
 - **Container**: Docker with multi-stage builds
@@ -24,7 +24,7 @@ This project demonstrates a production-ready CI/CD pipeline that:
 - **Load Balancer**: AWS ALB Ingress Controller (HTTP only)
 - **Auto-scaling**: Kubernetes HPA
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 eks-application-poc/
@@ -46,7 +46,7 @@ eks-application-poc/
 └── README.md                    # This file
 ```
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Prerequisites
 
@@ -85,7 +85,7 @@ eks-application-poc/
    docker run -p 5000:5000 eks-demo-app
    ```
 
-## 🔧 Configuration
+##  Configuration
 
 ### GitHub Secrets Required
 
@@ -102,7 +102,7 @@ The application uses these environment variables:
 - `ENVIRONMENT`: Environment name (default: development)
 - `PORT`: Port to run on (default: 5000)
 
-## 🚀 Deployment Pipeline
+##  Deployment Pipeline
 
 ### Automatic Deployment
 
@@ -124,7 +124,7 @@ You can manually trigger deployments from the GitHub Actions tab with environmen
 4. **Verify**: Check deployment status
 5. **Notify**: Report deployment results
 
-## 🐳 Docker Configuration
+##  Docker Configuration
 
 The Dockerfile includes:
 
@@ -134,7 +134,7 @@ The Dockerfile includes:
 - Gunicorn for production serving
 - Layer caching for faster builds
 
-## ☸️ Kubernetes Configuration
+##  Kubernetes Configuration
 
 ### Resources
 
@@ -150,7 +150,7 @@ The Dockerfile includes:
 - **Readiness Probe**: `/health` endpoint
 - **Resource Limits**: CPU and memory constraints
 
-## 📊 Monitoring and Scaling
+##  Monitoring and Scaling
 
 ### Auto-scaling
 
@@ -165,7 +165,7 @@ The Dockerfile includes:
 - Kubernetes health checks
 - ALB health checks
 
-## 🔍 Troubleshooting
+##  Troubleshooting
 
 ### Common Issues
 
@@ -193,7 +193,7 @@ kubectl logs -f deployment/eks-demo-app -n default
 kubectl get events -n default --sort-by='.lastTimestamp'
 ```
 
-## 🔐 Security Features
+##  Security Features
 
 - Non-root user in Docker container
 - Resource limits and requests
@@ -201,7 +201,7 @@ kubectl get events -n default --sort-by='.lastTimestamp'
 - Secure image pulling
 - Namespace isolation
 
-## 📈 Performance Features
+##  Performance Features
 
 - Multi-replica deployment
 - Load balancer distribution
@@ -209,7 +209,7 @@ kubectl get events -n default --sort-by='.lastTimestamp'
 - Layer caching in Docker builds
 - Gunicorn with multiple workers
 
-## 🤝 Contributing
+##  Contributing
 
 1. Fork the repository
 2. Create a feature branch
@@ -217,11 +217,11 @@ kubectl get events -n default --sort-by='.lastTimestamp'
 4. Add tests for new functionality
 5. Submit a pull request
 
-## 📄 License
+##  License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 🆘 Support
+##  Support
 
 For issues and questions:
 
@@ -229,7 +229,3 @@ For issues and questions:
 2. Review GitHub Actions logs
 3. Check Kubernetes events and logs
 4. Open an issue in the repository
-
----
-
-**Happy Deploying! 🚀**
